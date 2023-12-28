@@ -4,7 +4,7 @@ A Rust macro that can resolve a directory's file names before compile-time.
 
 # Status
 
-Deployment status: [![Deploy](https://github.com/Kitt3120/get_files_macr/actions/workflows/deploy.yml/badge.svg)](https://github.com/Kitt3120/get_files_macr/actions/workflows/deploy.yml)
+Deployment status: [![Deploy](https://github.com/Kitt3120/get_files_macro/actions/workflows/deploy.yml/badge.svg)](https://github.com/Kitt3120/get_files_macro/actions/workflows/deploy.yml)
 
 # Why?
 

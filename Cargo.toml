@@ -1,12 +1,13 @@
 [package]
 name = "get_files_macro"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "A Rust macro that can resolve a directory's file names before compile-time."
 license= "MIT"
 license-file = "LICENSE"
 readme = "README.md"
 authors = ["Torben Schweren"]
+repository = "https://github.com/Kitt3120/get_files_macro"
 
 [lib]
 proc-macro = true
