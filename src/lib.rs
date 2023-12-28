@@ -89,11 +89,11 @@ fn get_file_names(arguments: &Arguments, path: &Path) -> Vec<String> {
             ),
         };
 
-        if entry_name.starts_with('.') && !arguments.include_dotfiles {
-            continue;
-        }
-
         if entry_type.is_dir() {
+            if entry_name.starts_with('.') && !arguments.include_dotfiles {
+                continue;
+            }
+
             if arguments.include_directories {
                 entries.push(entry_name.clone());
             }
@@ -110,12 +110,14 @@ fn get_file_names(arguments: &Arguments, path: &Path) -> Vec<String> {
                     ));
                 }
             }
-        } else if entry_type.is_symlink() {
-            if arguments.include_symlinks {
-                entries.push(entry_name);
-            }
-        } else if entry_type.is_file() {
-            if arguments.include_files {
+        } else {
+            let should_add_as_symlink = entry_type.is_symlink() && arguments.include_symlinks;
+            let should_add_as_file =
+                entry_type.is_file() && !entry_name.starts_with('.') && arguments.include_files;
+            let should_add_as_dotfile = entry_name.starts_with('.') && arguments.include_dotfiles;
+            let should_add = should_add_as_symlink || should_add_as_file || should_add_as_dotfile;
+
+            if should_add {
                 entries.push(entry_name);
             }
         }
@@ -138,8 +140,21 @@ mod test {
 
     use crate::{get_file_names, Arguments};
 
+    fn test(arguments: &Arguments, test_names: Vec<&str>) {
+        let path = Path::new(&arguments.path);
+
+        let file_names = get_file_names(&arguments, &path);
+
+        eprintln!("Got names: {:?}", file_names);
+
+        assert_eq!(file_names.len(), test_names.len());
+        for (index, file_name) in file_names.iter().enumerate() {
+            assert_eq!(file_name, test_names[index]);
+        }
+    }
+
     #[test]
-    fn test_files() {
+    fn test_files_all() {
         let arguments = Arguments {
             recursive: true,
             include_dotfiles: true,
@@ -150,19 +165,101 @@ mod test {
             path: String::from("./test"),
         };
 
-        let path = Path::new(&arguments.path);
+        let test_names = vec![
+            "testfile1.test",
+            "testfile2.test",
+            "zzz",
+            "zzz/testfile3.test",
+            ".testfile.test",
+            "testfile.link",
+        ];
 
-        let file_names = get_file_names(&arguments, &path);
+        test(&arguments, test_names);
+    }
+
+    #[test]
+    fn test_files_no_dotfiles() {
+        let arguments = Arguments {
+            recursive: true,
+            include_dotfiles: false,
+            include_directories: true,
+            include_symlinks: true,
+            include_files: true,
+            separator: String::from("/"),
+            path: String::from("./test"),
+        };
 
         let test_names = vec![
             "testfile1.test",
             "testfile2.test",
             "zzz",
             "zzz/testfile3.test",
+            "testfile.link",
         ];
 
-        for (index, file_name) in file_names.iter().enumerate() {
-            assert_eq!(file_name, test_names[index]);
-        }
+        test(&arguments, test_names);
+    }
+
+    #[test]
+    fn test_files_no_directories() {
+        let arguments = Arguments {
+            recursive: true,
+            include_dotfiles: true,
+            include_directories: false,
+            include_symlinks: true,
+            include_files: true,
+            separator: String::from("/"),
+            path: String::from("./test"),
+        };
+
+        let test_names = vec![
+            "testfile1.test",
+            "testfile2.test",
+            "zzz/testfile3.test",
+            ".testfile.test",
+            "testfile.link",
+        ];
+
+        test(&arguments, test_names);
+    }
+
+    #[test]
+    fn test_files_no_symlinks() {
+        let arguments = Arguments {
+            recursive: true,
+            include_dotfiles: true,
+            include_directories: true,
+            include_symlinks: false,
+            include_files: true,
+            separator: String::from("/"),
+            path: String::from("./test"),
+        };
+
+        let test_names = vec![
+            "testfile1.test",
+            "testfile2.test",
+            "zzz",
+            "zzz/testfile3.test",
+            ".testfile.test",
+        ];
+
+        test(&arguments, test_names);
+    }
+
+    #[test]
+    fn test_files_no_files() {
+        let arguments = Arguments {
+            recursive: true,
+            include_dotfiles: true,
+            include_directories: true,
+            include_symlinks: true,
+            include_files: false,
+            separator: String::from("/"),
+            path: String::from("./test"),
+        };
+
+        let test_names = vec!["zzz", ".testfile.test", "testfile.link"];
+
+        test(&arguments, test_names);
     }
 }
