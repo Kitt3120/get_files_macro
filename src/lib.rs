@@ -49,7 +49,7 @@ impl Parse for Arguments {
 }
 
 #[proc_macro]
-pub fn list_files(input: TokenStream) -> TokenStream {
+pub fn get_files(input: TokenStream) -> TokenStream {
     let arguments = parse_macro_input!(input as Arguments);
 
     let path = Path::new(&arguments.path);
